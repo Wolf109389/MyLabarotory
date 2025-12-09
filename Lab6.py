@@ -2,16 +2,16 @@ import os
 from logging import getLogger, StreamHandler, FileHandler, Formatter, ERROR
 
 class FileNotFound(Exception):
-    """Файл не знайдено"""
+    """File not found"""
 
 class FileCorrupted(Exception):
-    """Файл пошкоджено або неможливо прочитати/записати"""
+    """The file is corrupt or cannot be read/written."""
 
 def logger(exeption, mode="console"):
     """
-    Параметризований декоратор.
-    :exception_type: — тип винятку, який перехоплюється
-    :mode: — 'console' або 'file'
+    Parameterized decorator.
+    :exception_type: — the type of exception being caught
+    :mode: — 'console' or 'file'
     """
 
     def decorator(func):
@@ -26,7 +26,7 @@ def logger(exeption, mode="console"):
             elif mode == "file":
                 handler = FileHandler("log.txt", encoding="utf-8")
             else:
-                raise ValueError("Невідомий режим логування!")
+                raise ValueError("Unknown logging mode!")
         
             format = Formatter("%(asctime)s - %(levelname)s - %(message)s")
             handler.setFormatter(format)
@@ -59,7 +59,7 @@ class CSVFileManager:
     
     @logger(FileCorrupted, mode="file")
     def read(self):
-        """" Читає CSV із input, або якщо він порожній то з output """
+        """" Reads CSV from input, or if it is empty then from output """
 
         if os.path.exists(self.input_file) and os.path.getsize(self.input_file) > 0:
             read_file = self.input_file
@@ -74,26 +74,26 @@ class CSVFileManager:
                 return data
             
         except Exception:
-            raise FileCorrupted("Не вдалося прочитати файл.")
+            raise FileCorrupted("Could not read file.")
         
     @logger(FileCorrupted, mode="file")
     def rewrite_all(self, rows: list):
-        """ Перезаписує CSV-файл """
+        """ Overwrites CSV file """
         try:
             with open(self.input_file, "w", encoding="utf-8") as file:
                 for row in rows:
                     file.write(",".join(row) + "\n")
         except Exception:
-            raise FileCorrupted("Не вдалося записати файл.")
+            raise FileCorrupted("Failed to write file.")
 
     @logger(FileCorrupted, mode="file")
     def append(self, row: list):
-        """ Додає рядок до CSV-файлу """
+        """ Appends rows to a CSV file """
         try:
             with open(self.input_file, "a", encoding="utf-8") as file:
                 file.write(",".join(row) + "\n")
         except Exception:
-            raise FileCorrupted("Не вдалося додати до файлу.")
+            raise FileCorrupted("Could not add to file.")
         
 csv_file = CSVFileManager()
 
