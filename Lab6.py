@@ -1,0 +1,147 @@
+import os
+from logging import getLogger, StreamHandler, FileHandler, Formatter, ERROR
+
+class FileNotFound(Exception):
+    """Файл не знайдено"""
+
+class FileCorrupted(Exception):
+    """Файл пошкоджено або неможливо прочитати/записати"""
+
+def logger(exeption, mode="console"):
+    """
+    Параметризований декоратор.
+    :exception_type: — тип винятку, який перехоплюється
+    :mode: — 'console' або 'file'
+    """
+
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            logger = getLogger(func.__name__)
+
+            logger.setLevel(ERROR)
+            logger.handlers.clear()
+
+            if mode == "console":
+                handler = StreamHandler()
+            elif mode == "file":
+                handler = FileHandler("log.txt", encoding="utf-8")
+            else:
+                raise ValueError("Невідомий режим логування!")
+        
+            format = Formatter("%(asctime)s - %(levelname)s - %(message)s")
+            handler.setFormatter(format)
+            logger.addHandler(handler)
+
+            try:
+                return func(*args, **kwargs)
+            except exeption as e:
+                logger.error(f"Помилка: {e}")
+                raise
+        
+        return wrapper
+    return decorator
+
+class CSVFileManager:
+    def __init__(self):
+        self.input_dir = "input"
+        self.output_dir = "output"
+
+        os.makedirs(self.input_dir, exist_ok=True)
+        os.makedirs(self.output_dir, exist_ok=True)
+
+        self.input_file = os.path.join(self.input_dir, "data.csv")
+        self.output_file = os.path.join(self.output_dir, "data.csv")
+
+        if not os.path.exists(self.input_file):
+            open(self.input_file, "a", encoding="utf-8").close()
+        if not os.path.exists(self.output_file):
+            open(self.output_file, "a", encoding="utf-8").close()
+    
+    @logger(FileCorrupted, mode="file")
+    def read(self):
+        """" Читає CSV із input, або якщо він порожній то з output """
+
+        if os.path.exists(self.input_file) and os.path.getsize(self.input_file) > 0:
+            read_file = self.input_file
+        elif os.path.exists(self.output_file) and os.path.getsize(self.output_file) > 0:
+            read_file = self.output_file
+        else:
+            raise FileCorrupted("Обидва файли відсутні або порожні.")
+
+        try:
+            with open(read_file, "r", encoding="utf-8") as file:
+                data = [line.strip().split(",") for line in file.readlines()]
+                return data
+            
+        except Exception:
+            raise FileCorrupted("Не вдалося прочитати файл.")
+        
+    @logger(FileCorrupted, mode="file")
+    def rewrite_all(self, rows: list):
+        """ Перезаписує CSV-файл """
+        try:
+            with open(self.input_file, "w", encoding="utf-8") as file:
+                for row in rows:
+                    file.write(",".join(row) + "\n")
+        except Exception:
+            raise FileCorrupted("Не вдалося записати файл.")
+
+    @logger(FileCorrupted, mode="file")
+    def append(self, row: list):
+        """ Додає рядок до CSV-файлу """
+        try:
+            with open(self.input_file, "a", encoding="utf-8") as file:
+                file.write(",".join(row) + "\n")
+        except Exception:
+            raise FileCorrupted("Не вдалося додати до файлу.")
+        
+csv_file = CSVFileManager()
+
+if __name__ == "__main__":
+    while True:
+        num_row = 0
+        os.system("cls")
+
+        print("Меню:")
+        print("1. Прочитати файл\n2. Переписати файл\n3. Додати до файлу\n(other). Вийти")
+        action = input("Що бажаєте зробити? (Введіть одне з чисел зазначених вище): ")
+
+        if action == "1":
+            os.system("cls")
+
+            exel = csv_file.read()
+            for row in exel:
+                print("\t | \t".join(row))
+            
+            input()
+
+        elif action == "2":
+            os.system("cls")
+
+            rows = []
+            print("Введіть рядки у форматі 'значення1,значення2,...,значенняN' (порожній рядок для завершення):")
+            
+            while True:
+                num_row += 1
+                new_row = input("рядок,", num_row)
+                if new_row == "":
+                    break
+                rows.append(new_row.split(","))
+            
+            csv_file.rewrite_all(rows)
+
+        elif action == "3":
+            os.system("cls")
+
+            print("Введіть рядок у форматі 'значення1,значення2,значення3':")
+
+            while True:
+                if new_row == "":
+                    break
+                new_row = input("рядок,", num_row)
+            csv_file.append(new_row.split(","))
+            
+            input()
+
+        else:
+            break
