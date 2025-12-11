@@ -26,7 +26,7 @@ def logger(exeption, mode="console"):
             elif mode == "file":
                 handler = FileHandler("log.txt", encoding="utf-8")
             else:
-                raise ValueError("Невідомий режим логування!")
+                raise ValueError("Unknown logging mode!")
         
             format = Formatter("%(asctime)s - %(levelname)s - %(message)s")
             handler.setFormatter(format)
