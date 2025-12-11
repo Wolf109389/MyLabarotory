@@ -2,10 +2,10 @@ import os
 from logging import getLogger, StreamHandler, FileHandler, Formatter, ERROR
 
 class FileNotFound(Exception):
-    """File not found"""
+    """ File not found """
 
 class FileCorrupted(Exception):
-    """The file is corrupt or cannot be read/written."""
+    """ The file is corrupt or cannot be read/written. """
 
 def logger(exeption, mode="console"):
     """
@@ -26,7 +26,7 @@ def logger(exeption, mode="console"):
             elif mode == "file":
                 handler = FileHandler("log.txt", encoding="utf-8")
             else:
-                raise ValueError("Unknown logging mode!")
+                raise ValueError("Невідомий режим логування!")
         
             format = Formatter("%(asctime)s - %(levelname)s - %(message)s")
             handler.setFormatter(format)
@@ -59,14 +59,14 @@ class CSVFileManager:
     
     @logger(FileCorrupted, mode="file")
     def read(self):
-        """" Reads CSV from input, or if it is empty then from output """
+        """ Reads CSV from input, or if it is empty then from output """
 
         if os.path.exists(self.input_file) and os.path.getsize(self.input_file) > 0:
             read_file = self.input_file
         elif os.path.exists(self.output_file) and os.path.getsize(self.output_file) > 0:
             read_file = self.output_file
         else:
-            raise FileCorrupted("Обидва файли відсутні або порожні.")
+            raise FileCorrupted("Both files are missing or empty.")
 
         try:
             with open(read_file, "r", encoding="utf-8") as file:
@@ -74,7 +74,7 @@ class CSVFileManager:
                 return data
             
         except Exception:
-            raise FileCorrupted("Could not read file.")
+            raise FileCorrupted("The file could not be read.")
         
     @logger(FileCorrupted, mode="file")
     def rewrite_all(self, rows: list):
@@ -94,12 +94,11 @@ class CSVFileManager:
                 file.write(",".join(row) + "\n")
         except Exception:
             raise FileCorrupted("Could not add to file.")
-        
-csv_file = CSVFileManager()
 
 if __name__ == "__main__":
+    csv_file = CSVFileManager()
+    num_row = 1
     while True:
-        num_row = 0
         os.system("cls")
 
         print("Меню:")
@@ -116,30 +115,42 @@ if __name__ == "__main__":
             input()
 
         elif action == "2":
+            num_row = 1
             os.system("cls")
 
             rows = []
             print("Введіть рядки у форматі 'значення1,значення2,...,значенняN' (порожній рядок для завершення):")
             
             while True:
-                num_row += 1
-                new_row = input("рядок,", num_row)
-                if new_row == "":
+                new_row = input(f"Рядок, {num_row}: ")
+                if new_row == "" and num_row == 1:
+                    print("Не було введено жодного рядка. Файл буде порожнім.")
+                    autific = input("Продовжити? (Так(1)/Ні(2)): ")
+                    if autific == "1":
+                        break
+                    else:
+                        num_row = 1
+                        continue
+                
+                elif new_row == "":
                     break
+                num_row += 1
                 rows.append(new_row.split(","))
             
             csv_file.rewrite_all(rows)
 
         elif action == "3":
+            new_row = ""
             os.system("cls")
 
             print("Введіть рядок у форматі 'значення1,значення2,значення3':")
 
             while True:
+                new_row = input(f"Рядок, {num_row}: ")
                 if new_row == "":
                     break
-                new_row = input("рядок,", num_row)
-            csv_file.append(new_row.split(","))
+                num_row += 1
+                csv_file.append(new_row.split(","))
             
             input()
 
