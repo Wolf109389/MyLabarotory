@@ -106,13 +106,18 @@ if __name__ == "__main__":
         action = input("Що бажаєте зробити? (Введіть одне з чисел зазначених вище): ")
 
         if action == "1":
-            os.system("cls")
-
-            exel = csv_file.read()
-            for row in exel:
-                print("\t | \t".join(row))
-            
-            input()
+            try:
+                os.system("cls")
+    
+                exel = csv_file.read()
+                for row in exel:
+                    print("\t | \t".join(row))
+                
+                input()
+                
+            except FileCorrupted as e:
+                print(f"Сталася помилка: {e}")
+                input()
 
         elif action == "2":
             num_row = 1
